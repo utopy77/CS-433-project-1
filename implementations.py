@@ -1,9 +1,9 @@
 import numpy as np
 
-
 # ---------------------------------------------------------------------------
 # Helpers: mean squared error
 # ---------------------------------------------------------------------------
+
 
 def compute_mse(y, tx, w):
     """Mean squared error (with the 0.5 factor).
@@ -11,8 +11,9 @@ def compute_mse(y, tx, w):
     L(w) = 1 / (2N) * sum_n e_n^2,  with e = y - tx @ w.
     Returns a scalar.
     """
-    e = y - tx.dot(w)                      # residuals, shape (N,)
-    return 0.5 * np.mean(e ** 2)           # = (1 / (2N)) * sum(e^2)
+    e = y - tx.dot(w)  # residuals, shape (N,)
+    return 0.5 * np.mean(e**2)  # = (1 / (2N)) * sum(e^2)
+
 
 def compute_mse_gradient(y, tx, w):
     """Gradient of ``compute_mse`` with respect to w.
@@ -20,13 +21,14 @@ def compute_mse_gradient(y, tx, w):
     grad L(w) = -(1 / N) * tx^T e,  with e = y - tx @ w.
     Returns a 1D array of shape (D,).
     """
-    e = y - tx.dot(w)                      # residuals, shape (N,)
-    return -tx.T.dot(e) / y.shape[0]       # shape (D,)
+    e = y - tx.dot(w)  # residuals, shape (N,)
+    return -tx.T.dot(e) / y.shape[0]  # shape (D,)
 
 
 # ---------------------------------------------------------------------------
 # Helpers: logistic regression
 # ---------------------------------------------------------------------------
+
 
 def sigmoid(t):
     """Numerically stable logistic sigmoid, applied element-wise.
@@ -42,7 +44,7 @@ def sigmoid(t):
     pos = t >= 0
     out[pos] = 1.0 / (1.0 + np.exp(-t[pos]))
 
-    exp_t = np.exp(t[~pos])                # safe: t < 0  =>  exp(t) in (0, 1)
+    exp_t = np.exp(t[~pos])  # safe: t < 0  =>  exp(t) in (0, 1)
     out[~pos] = exp_t / (1.0 + exp_t)
 
     return out
@@ -57,7 +59,7 @@ def compute_logistic_loss(y, tx, w):
     way (it never overflows, even for large positive z).
     Returns a scalar.
     """
-    z = tx.dot(w)                                   # scores, shape (N,)
+    z = tx.dot(w)  # scores, shape (N,)
     return np.mean(np.logaddexp(0.0, z) - y * z)
 
 
@@ -67,13 +69,14 @@ def compute_logistic_gradient(y, tx, w):
     grad L(w) = (1 / N) * tx^T (sigma(tx @ w) - y).
     Returns a 1D array of shape (D,).
     """
-    pred = sigmoid(tx.dot(w))                       # probabilities, shape (N,)
-    return tx.T.dot(pred - y) / y.shape[0]          # shape (D,)
+    pred = sigmoid(tx.dot(w))  # probabilities, shape (N,)
+    return tx.T.dot(pred - y) / y.shape[0]  # shape (D,)
 
 
 # ---------------------------------------------------------------------------
 # 1) Linear regression using gradient descent
 # ---------------------------------------------------------------------------
+
 
 def mean_squared_error_gd(y, tx, initial_w, max_iters, gamma):
     """Linear regression using full gradient descent on the MSE cost.
@@ -94,19 +97,20 @@ def mean_squared_error_gd(y, tx, initial_w, max_iters, gamma):
                 If ``max_iters == 0`` the initial vector and its loss are
                 returned.
     """
-    w = np.asarray(initial_w, dtype=float).copy()   # never modify the input
+    w = np.asarray(initial_w, dtype=float).copy()  # never modify the input
 
     for _ in range(max_iters):
-        grad = compute_mse_gradient(y, tx, w)       # gradient at the current w
-        w = w - gamma * grad                        # gradient-descent step
+        grad = compute_mse_gradient(y, tx, w)  # gradient at the current w
+        w = w - gamma * grad  # gradient-descent step
 
-    loss = compute_mse(y, tx, w)                    # loss of the LAST w
+    loss = compute_mse(y, tx, w)  # loss of the LAST w
     return w, loss
 
 
 # ---------------------------------------------------------------------------
 # 2) Linear regression using stochastic gradient descent
 # ---------------------------------------------------------------------------
+
 
 def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma):
     """Linear regression using SGD on the MSE cost, mini-batch size 1.
@@ -126,19 +130,20 @@ def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma):
     for _ in range(max_iters):
         # Draw a single sample (standard mini-batch size of 1).
         n = np.random.randint(n_samples)
-        y_n = y[n:n + 1]                            # keep shapes (1,) / (1, D)
-        tx_n = tx[n:n + 1]
+        y_n = y[n : n + 1]  # keep shapes (1,) / (1, D)
+        tx_n = tx[n : n + 1]
 
-        grad = compute_mse_gradient(y_n, tx_n, w)   # stochastic gradient
-        w = w - gamma * grad                        # SGD step
+        grad = compute_mse_gradient(y_n, tx_n, w)  # stochastic gradient
+        w = w - gamma * grad  # SGD step
 
-    loss = compute_mse(y, tx, w)                    # full-data loss at last w
+    loss = compute_mse(y, tx, w)  # full-data loss at last w
     return w, loss
 
 
 # ---------------------------------------------------------------------------
 # 3) Least squares regression using normal equations
 # ---------------------------------------------------------------------------
+
 
 def least_squares(y, tx):
     """Least squares solution obtained from the normal equations.
@@ -152,12 +157,12 @@ def least_squares(y, tx):
     -------
     (w, loss) : optimal weights and the corresponding MSE.
     """
-    a = tx.T.dot(tx)                                # Gram matrix, (D, D)
-    b = tx.T.dot(y)                                 # right-hand side, (D,)
+    a = tx.T.dot(tx)  # Gram matrix, (D, D)
+    b = tx.T.dot(y)  # right-hand side, (D,)
 
     try:
         w = np.linalg.solve(a, b)
-    except np.linalg.LinAlgError:                   # singular Gram matrix
+    except np.linalg.LinAlgError:  # singular Gram matrix
         w = np.linalg.pinv(a).dot(b)
 
     loss = compute_mse(y, tx, w)
@@ -167,6 +172,7 @@ def least_squares(y, tx):
 # ---------------------------------------------------------------------------
 # 4) Ridge regression using normal equations
 # ---------------------------------------------------------------------------
+
 
 def ridge_regression(y, tx, lambda_):
     """Ridge regression solved through the (regularized) normal equations.
@@ -184,19 +190,20 @@ def ridge_regression(y, tx, lambda_):
     """
     n_samples, n_features = tx.shape
 
-    lambda_prime = 2.0 * n_samples * lambda_        # rescaled regularizer
+    lambda_prime = 2.0 * n_samples * lambda_  # rescaled regularizer
     a = tx.T.dot(tx) + lambda_prime * np.eye(n_features)
     b = tx.T.dot(y)
 
-    w = np.linalg.solve(a, b)                       # a is positive definite
-                                                    # as soon as lambda_ > 0
-    loss = compute_mse(y, tx, w)                    # penalty NOT included
+    w = np.linalg.solve(a, b)  # a is positive definite
+    # as soon as lambda_ > 0
+    loss = compute_mse(y, tx, w)  # penalty NOT included
     return w, loss
 
 
 # ---------------------------------------------------------------------------
 # 5) Logistic regression using gradient descent
 # ---------------------------------------------------------------------------
+
 
 def logistic_regression(y, tx, initial_w, max_iters, gamma):
     """Logistic regression (y in {0, 1}) trained by gradient descent.
@@ -212,15 +219,16 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
 
     for _ in range(max_iters):
         grad = compute_logistic_gradient(y, tx, w)  # gradient at current w
-        w = w - gamma * grad                        # gradient-descent step
+        w = w - gamma * grad  # gradient-descent step
 
-    loss = compute_logistic_loss(y, tx, w)          # loss of the LAST w
+    loss = compute_logistic_loss(y, tx, w)  # loss of the LAST w
     return w, loss
 
 
 # ---------------------------------------------------------------------------
 # 6) Regularized logistic regression using gradient descent
 # ---------------------------------------------------------------------------
+
 
 def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
     """L2-regularized logistic regression (y in {0, 1}) by gradient descent.
@@ -241,7 +249,7 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
     for _ in range(max_iters):
         # Gradient of the PENALIZED objective.
         grad = compute_logistic_gradient(y, tx, w) + 2.0 * lambda_ * w
-        w = w - gamma * grad                        # gradient-descent step
+        w = w - gamma * grad  # gradient-descent step
 
-    loss = compute_logistic_loss(y, tx, w)          # penalty NOT included
+    loss = compute_logistic_loss(y, tx, w)  # penalty NOT included
     return w, loss
