@@ -2,3 +2,26 @@
 .DS_store
 .vs_code
 .Rhistory
+
+# Local datasets
+dataset/
+datasets/
+data/
+
+# Python caches and notebook checkpoints
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+
+# IDE settings
+.idea/
+.vscode/
+*.iml
+
+# Virtual environments
+.venv/
+venv/
+.env/
+env/
+ENV/
