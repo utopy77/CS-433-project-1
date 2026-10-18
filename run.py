@@ -15,7 +15,7 @@ from validation import classification_metrics, make_stratified_folds
 
 
 def fit_model(
-    y01, tx, lambda_, gamma=0.1, block_size=100, max_iters=5000, gradient_tol=0.0001
+    y01, tx, lambda_, gamma=0.1, block_size=100, max_iters=20000, gradient_tol=0.0001
 ):
     """Train from zero weights, checking the penalized gradient after each block."""
     w = np.zeros(tx.shape[1])
@@ -41,12 +41,15 @@ def main():
     settings = {
         "gamma": 0.1,
         "block_size": 100,
-        "max_iters": 5000,
+        "max_iters": 20000,
         "gradient_tol": 0.0001,
     }
     features = [
         "_AGE80", "_BMI5", "SEX", "GENHLTH", "BPHIGH4", "DIABETE3",
         "_SMOKER3", "CVDSTRK3", "TOLDHI2", "EXERANY2",
+        "PHYSHLTH", "MENTHLTH", "CHCKIDNY", "CHCCOPD1", "ADDEPEV2",
+        "HAVARTH3", "QLACTLM2", "USEEQUIP", "DIFFWALK", "EMPLOY1",
+        "INCOME2", "EDUCA", "MARITAL",
     ]
 
     print("Loading data once...", flush=True)
@@ -56,7 +59,7 @@ def main():
     columns = [feature_names.index(name) for name in features]
     x_train, x_test = x_train[:, columns], x_test[:, columns]
     folds = make_stratified_folds(y, k=5, seed=seed)
-    scores = np.empty((len(lambdas), len(thresholds), len(folds), 3))
+    scores = np.empty((len(lambdas), len(thresholds), len(folds), 4))
     iterations_used = np.zeros((len(lambdas), len(folds)), dtype=int)
 
     for fold, (train_rows, valid_rows) in enumerate(folds):
@@ -75,7 +78,9 @@ def main():
             for ti, threshold in enumerate(thresholds):
                 predictions = np.where(probabilities >= threshold, 1, -1)
                 metrics = classification_metrics(y[valid_rows], predictions)
-                scores[li, ti, fold] = [metrics["f1"], metrics["precision"], metrics["recall"]]
+                scores[li, ti, fold] = [
+                    metrics["f1"], metrics["precision"], metrics["recall"], metrics["accuracy"]
+                ]
 
     mean_f1 = scores[:, :, :, 0].mean(axis=2)
     best_li, best_ti = np.unravel_index(np.argmax(mean_f1), mean_f1.shape)
@@ -100,6 +105,7 @@ def main():
                 "std_f1": float(fold_scores[:, 0].std()),
                 "mean_precision": float(fold_scores[:, 1].mean()),
                 "mean_recall": float(fold_scores[:, 2].mean()),
+                "mean_accuracy": float(fold_scores[:, 3].mean()),
                 "iterations_used": "|".join(map(str, iterations_used[li])),
                 "capped_folds": "|".join(
                     str(i + 1) for i, count in enumerate(iterations_used[li])
@@ -109,17 +115,16 @@ def main():
             })
     log_path = root / "logs" / "experiments.csv"
     log_path.parent.mkdir(exist_ok=True)
-    write_header = not log_path.exists() or log_path.stat().st_size == 0
-    with log_path.open("a", newline="", encoding="utf-8") as output:
+    with log_path.open("w", newline="", encoding="utf-8") as output:
         writer = csv.DictWriter(output, fieldnames=list(records[0]))
-        if write_header:
-            writer.writeheader()
+        writer.writeheader()
         writer.writerows(records)
 
     print(f"Selected lambda={best_lambda}, threshold={best_threshold:.2f}, seed={seed}", flush=True)
     print(
         f"Validation F1={selected[:, 0].mean():.6f} +/- {selected[:, 0].std():.6f}, "
-        f"precision={selected[:, 1].mean():.6f}, recall={selected[:, 2].mean():.6f}",
+        f"precision={selected[:, 1].mean():.6f}, recall={selected[:, 2].mean():.6f}, "
+        f"accuracy={selected[:, 3].mean():.6f}",
         flush=True,
     )
     print("Fold F1: " + ", ".join(f"{value:.6f}" for value in selected[:, 0]), flush=True)
