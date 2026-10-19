@@ -59,4 +59,13 @@ def preprocess(x_train, x_eval, feature_names):
         train_columns.append((~np.isin(train_values, codes)).astype(float))
         eval_columns.append((~np.isin(eval_values, codes)).astype(float))
 
+    train_rehab = np.isfinite(x_train[:, columns["HAREHAB1"]])
+    eval_rehab = np.isfinite(x_eval[:, columns["HAREHAB1"]])
+    train_cardio = np.isfinite(x_train[:, columns["CVDASPRN"]])
+    eval_cardio = np.isfinite(x_eval[:, columns["CVDASPRN"]])
+    train_columns.append(train_rehab.astype(float))
+    eval_columns.append(eval_rehab.astype(float))
+    train_columns.append((train_cardio & ~train_rehab).astype(float))
+    eval_columns.append((eval_cardio & ~eval_rehab).astype(float))
+
     return np.column_stack(train_columns), np.column_stack(eval_columns)
