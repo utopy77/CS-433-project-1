@@ -59,10 +59,10 @@ python run.py
 ```
 
 `run.py` executes the following steps:
-1. **Recoding & Preprocessing (`preprocessing.py`):** Excludes administrative, redundant, and leakage columns; recodes BRFSS questionnaire special codes (`77`/`88`/`99`, etc.) to `NaN` or `0`; drops features with $> 80\%$ missing values ($\tau = 0.8$); applies median imputation, missingness indicators, and one-hot encoding of nominal variables; and standardizes all features using training statistics only.
-2. **Threshold Selection:** Uses a stratified $4/5$–$1/5$ inner split of the training set (`SEED = 42`) to select the probability threshold that maximizes the $F_1$ score under class imbalance ($p \approx 8.8\%$).
-3. **Model Training (`implementations.py`):** Fits unregularized logistic regression on the full training set via gradient descent ($1000$ iterations) with adaptive Lipschitz step size $\gamma = 1 / L$, where $L = \lambda_{\max}(X^\top X / n) / 4$.
-4. **Prediction:** Outputs binary predictions in $\{-1, 1\}$ to `submission.csv` (achieving **$F_1 = 0.439$** and **$87.5\%$ accuracy** on the AIcrowd test leaderboard).
+1. Recoding and preprocessing (`preprocessing.py`)
+2. Threshold selection
+3. Model training (`implementations.py`)
+4. Prediction (achieving **$F_1 = 0.439$** and **$87.5\%$ accuracy** on the AIcrowd test leaderboard)
 
 ---
 
