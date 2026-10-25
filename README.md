@@ -29,6 +29,13 @@ The core pipeline (`run.py`, `implementations.py`, `preprocessing.py`, `validati
 ```bash
 pip install numpy
 ```
+To run the tests you will need to install these modules:
+
+```bash
+pip install pytest
+pip install black
+pip install gitpython  
+```
 
 To run the notebooks or the grading test suite, you can create the provided Conda environment:
 
@@ -71,5 +78,5 @@ python run.py
 To verify the implementations in `implementations.py` against the public unit tests:
 
 ```bash
-pytest grading_tests/test_project1_public.py
+pytest grading_tests/test_project1_public.py --github_link https://github.com/utopy77/CS-433-project-1/tree/main
 ```
