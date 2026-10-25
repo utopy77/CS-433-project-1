@@ -2,3 +2,5 @@
 .DS_store
 .vs_code
 .Rhistory
+.venv
+__pycache__
